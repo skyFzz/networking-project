@@ -72,14 +72,29 @@ int main(int argc, char *argv[]) {
 
 	freeaddrinfo(servinfo);	// all done with this structure
 	
-	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-		perror("recv");
+	// construct HTTP request
+	const char *request = "GET / HTTP/1.1\r\n"
+			      "Host: 192.168.1.2\r\n"
+			      "Connection: close\r\n\r\n";
+
+	// send HTTP request
+	if (send(sockfd, request, strlen(request), 0) == -1) {
+		perror("send");
+		close(sockfd);
 		exit(1);
 	}
 
-	buf[numbytes] = '\0';
+	// receive HTTP response, check the number of bytes read
+	while ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) > 0) {
+		buf[numbytes] = '\0';
+		printf("client: received '%s'\n", buf);
+	}	
 
-	printf("client: received '%s'\n", buf);
+
+	if (numbytes == -1) {
+		perror("recv");
+		exit(1);
+	}
 
 	close(sockfd);
 

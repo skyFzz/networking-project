@@ -80,6 +80,7 @@ int main(void) {
 	}
 
 	freeaddrinfo(servinfo);		// all done with this structure, free the linked list
+	exit(-1);
 
 	// meaning no valid entry	
 	if (p == NULL) {
@@ -116,7 +117,14 @@ int main(void) {
 
 		if (!fork()) {		// this is the child process
 			close(sockfd);	// child doesn't need the listener
-			if (send(new_fd, "Hello, world!", 13, 0) == -1)
+			const char *response = "HTTP/1.1 200 OK\r\n"
+					       "Content-Type: text/html\r\n\r\n"
+					       "<html>\n"
+					       "<body>\n"
+					       "<h1>Hello, world!</h1>\n"
+					       "</body>\n"
+					       "</html>";
+			if (send(new_fd, response, strlen(response), 0) == -1)
 				perror("send");
 			close(new_fd);
 			exit(0);
