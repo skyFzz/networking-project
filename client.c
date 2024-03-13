@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 
 #define PORT "3490"	// the port client will be connecting to
+#define IP "161.35.98.8"// the ip address of the server client will be connecting to
 
 #define MAXDATASIZE 100	// max number of bytes we can get at once
 
@@ -31,8 +32,8 @@ int main(int argc, char *argv[]) {
 	int rv;
 	char s[INET6_ADDRSTRLEN];
 
-	if (argc != 2) {
-		fprintf(stderr, "usage: client hostname\n");
+	if (argc != 1) {
+		fprintf(stderr, "usage: client\n");
 		exit(1);
 	}
 
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]) {
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
+	if ((rv = getaddrinfo(IP, PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
@@ -72,29 +73,15 @@ int main(int argc, char *argv[]) {
 
 	freeaddrinfo(servinfo);	// all done with this structure
 	
-	// construct HTTP request
-	const char *request = "GET / HTTP/1.1\r\n"
-			      "Host: 192.168.1.2\r\n"
-			      "Connection: close\r\n\r\n";
-
-	// send HTTP request
-	if (send(sockfd, request, strlen(request), 0) == -1) {
-		perror("send");
-		close(sockfd);
-		exit(1);
-	}
-
-	// receive HTTP response, check the number of bytes read
-	while ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) > 0) {
-		buf[numbytes] = '\0';
-		printf("client: received '%s'\n", buf);
-	}	
-
-
-	if (numbytes == -1) {
+	// store the message sent from server
+	if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
 		perror("recv");
 		exit(1);
 	}
+	
+	buf[numbytes] = '\0';
+
+	printf("client: received '%s'\n", buf);
 
 	close(sockfd);
 
