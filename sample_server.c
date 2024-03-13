@@ -49,12 +49,14 @@ int main(void) {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_flags = AI_PASSIVE;	// use my IP
 
+	// do DNS look up
 	if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
 		return 1;
 	}
 
-	// loop through all the results and bind to the first we can
+	// loop through all the results and bind to the first valid entry
+	// *p is used to store that entry
 	for (p = servinfo; p != NULL; p = p->ai_next) {
 		if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
 			perror("server: socket");
@@ -76,13 +78,15 @@ int main(void) {
 		
 	}
 
-	freeaddrinfo(servinfo);		// all done with this structure
-	
+	freeaddrinfo(servinfo);		// all done with this structure, free the linked list
+
+	// meaning no valid entry	
 	if (p == NULL) {
 		fprintf(stderr, "server: failed to bind\n");
 		exit(1);
 	}
 
+	// wait for incoming connections
 	if (listen(sockfd, BACKLOG) == -1) {
 		perror("listen");
 		exit(1);
@@ -99,7 +103,7 @@ int main(void) {
 	printf("server: waiting for connections...\n");
 
 	while(1) {	// main accept() loop
-		sin_size = sizeof their_addr;
+		sin_size = sizeof their_addr;	// set to the size of connector addressinfo
 		new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
 		if (new_fd == -1) {
 			perror("accept");
