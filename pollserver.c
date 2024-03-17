@@ -103,7 +103,6 @@ void del_from_pfds(struct pollfd pfds[], int i, int *fd_count)
 
 // Main
 int main(void)
-	exit(-1);
 {
     int listener;     // Listening socket descriptor
 
@@ -149,7 +148,6 @@ int main(void)
 
             // Check if someone's ready to read
             if (pfds[i].revents & POLLIN) { // We got one!!
-	exit(-1);
 
                 if (pfds[i].fd == listener) {
                     // If listener is ready to read, handle new connection
